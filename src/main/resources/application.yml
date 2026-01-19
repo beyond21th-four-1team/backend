@@ -1,0 +1,6 @@
+#spring.application.name=yeopa-backend
+spring:
+  profiles:
+    active: dev
+  application:
+    name: yeopa-backend
