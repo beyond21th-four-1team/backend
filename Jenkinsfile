@@ -18,7 +18,15 @@ pipeline {
                     withCredentials([string(credentialsId: 'APP_DEV_YML', variable: 'APP_DEV_YML')]) {
                         sh '''
                             mkdir -p src/main/resources
-                            echo "$APP_DEV_YML" > src/main/resources/application-dev.yml
+
+                            # base64 decode (macOS: -D, Linux: -d)
+                            if base64 --help 2>&1 | grep -q -- "-d"; then
+                                echo "$APP_DEV_YML" | base64 -d > src/main/resources/application-dev.yml
+                            else
+                              echo "$APP_DEV_YML" | base64 -D > src/main/resources/application-dev.yml
+                            fi
+
+                            
                             sed -n '1,40p' src/main/resources/application-dev.yml
                             chmod +x ./gradlew
                             ./gradlew clean build -x test
