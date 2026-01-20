@@ -17,18 +17,17 @@ pipeline {
 
                     withCredentials([string(credentialsId: 'APP_DEV_YML', variable: 'APP_DEV_YML')]) {
                         sh '''
-                            set -e
                             mkdir -p src/main/resources
 
-                            # base64 decode (Linux: -d, macOS: -D)
+                            # base64 decode (macOS: -D, Linux: -d)
                             if base64 --help 2>&1 | grep -q -- "-d"; then
                                 echo "$APP_DEV_YML" | base64 -d > src/main/resources/application-dev.yml
                             else
-                                echo "$APP_DEV_YML" | base64 -D > src/main/resources/application-dev.yml
+                              echo "$APP_DEV_YML" | base64 -D > src/main/resources/application-dev.yml
                             fi
 
+                            
                             sed -n '1,40p' src/main/resources/application-dev.yml
-
                             chmod +x ./gradlew
                             ./gradlew clean build -x test
                         '''
@@ -48,18 +47,12 @@ pipeline {
                         )
                     ]) {
                         sh '''
-                            set -e
-                            chmod +x ./gradlew
-
-                            ./gradlew jib \
-                              -Djib.to.image=${DOCKER_USER}/argocd-pipe:${BUILD_NUMBER} \
-                              -Djib.to.auth.username=${DOCKER_USER} \
-                              -Djib.to.auth.password=${DOCKER_PASS}
-
-                            ./gradlew jib \
-                              -Djib.to.image=${DOCKER_USER}/argocd-pipe:latest \
-                              -Djib.to.auth.username=${DOCKER_USER} \
-                              -Djib.to.auth.password=${DOCKER_PASS}
+                            docker build -t ${DOCKER_USER}/argocd-pipe:${BUILD_NUMBER} .
+                            docker build -t ${DOCKER_USER}/argocd-pipe:latest .
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push ${DOCKER_USER}/argocd-pipe:${BUILD_NUMBER}
+                            docker push ${DOCKER_USER}/argocd-pipe:latest
+                            docker logout
                         '''
                     }
                 }
@@ -74,7 +67,6 @@ pipeline {
                         url: "${env.MANIFESTS_GITHUB_URL}"
 
                     sh """
-                        set -e
                         sed -i '' 's|argocd-pipe:.*|argocd-pipe:${BUILD_NUMBER}|' boot-deployment.yml
                         git add boot-deployment.yml
                         git config user.name "${env.GIT_USERNAME}"
