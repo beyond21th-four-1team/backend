@@ -14,9 +14,12 @@ pipeline {
             steps {
                 dir('source') {
                     git branch: 'main', url: "${env.SOURCE_GITHUB_URL}"
-
-                    sh '''
-                        chmod +x ./gradlew
+                    
+                    withCredentials([string(credentialsId: 'APP_DEV_YML', variable: 'APP_DEV_YML')]) {
+                        sh '''
+                          mkdir -p src/main/resources
+                          printf "%s" "$APP_DEV_YML" > src/main/resources/application-dev.yml
+                          chmod +x ./gradlew
                         ./gradlew clean build -x test
                     '''
                 }
