@@ -56,7 +56,12 @@ pipeline {
                         url: "${env.MANIFESTS_GITHUB_URL}"
 
                     sh """
-                        sed -i 's|argocd-pipe:.*|argocd-pipe:${BUILD_NUMBER}|' boot-deployment.yml
+                        if sed --version >/dev/null 2>&1; then
+                            # GNU sed (Linux)
+                            sed -i 's|argocd-pipe:.*|argocd-pipe:${BUILD_NUMBER}|' boot-deployment.yml
+                        else
+                            # BSD sed (macOS)
+                            sed -i '' 's|argocd-pipe:.*|argocd-pipe:${BUILD_NUMBER}|' boot-deployment.yml
                         git add boot-deployment.yml
                         git config user.name "${env.GIT_USERNAME}"
                         git config user.email "${env.GIT_EMAIL}"
