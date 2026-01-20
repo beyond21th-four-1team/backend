@@ -18,7 +18,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'APP_DEV_YML', variable: 'APP_DEV_YML')]) {
                         sh '''
                             mkdir -p src/main/resources
-                            printf "%s" "$APP_DEV_YML" > src/main/resources/application-dev.yml
+                            echo "$APP_DEV_YML" > src/main/resources/application-dev.yml
                             sed -n '1,40p' src/main/resources/application-dev.yml
                             chmod +x ./gradlew
                             ./gradlew clean build -x test
