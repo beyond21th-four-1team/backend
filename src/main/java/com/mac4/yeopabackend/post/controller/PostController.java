@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/v1/posts")
+@RequestMapping("/api/v1/posts")
 public class PostController {
     private final PostService postService;
     private final FileService fileService;
@@ -34,17 +34,10 @@ public class PostController {
             @ModelAttribute PostRequest request) throws IOException {
         if(user == null) throw new BusinessException(ErrorCode.AUTH_UNAUTHORIZED);
         MultipartFile file = request.getFile();
-        if(file.getOriginalFilename().matches("[A-Za-z0-9._\\-가-힣 ]+"))
-            throw new BusinessException(ErrorCode.POST_TEXT_NONINCODING);
         FileInfo fileName = fileService.uploadFile(file);
-        postService.create(user.getId(), request, fileName.objectKey(),fileName.originalName());
+        postService.create(user.getId(),user.getUsername(), request, fileName.objectKey(),fileName.originalName());
 
         return ApiResponse.success();
-    }
-
-    @GetMapping("/list")
-    public ApiResponse<List<String>> list() {
-        return ApiResponse.success(fileService.listFiles());
     }
 
     @GetMapping("/{id}")
@@ -53,7 +46,7 @@ public class PostController {
     }
 
     @GetMapping
-    public ApiResponse<List<MypageResponse>>getAllPost(){
+    public ApiResponse<List<MypageResponse>>getAllPostOrderByDECS(){
         return ApiResponse.success(postService.getAllPost());
     }
 

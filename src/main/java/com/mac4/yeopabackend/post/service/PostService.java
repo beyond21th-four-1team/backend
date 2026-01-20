@@ -19,26 +19,27 @@ public class PostService {
     @Value("${s3.endpoint}")
     private String endpoint;
 
-    public void create(Long userId, PostRequest postRequest, String objectKey, String originalName){
+    public void create(Long userId, String nickname, PostRequest postRequest, String objectKey, String originalName){
         String image = endpoint + "/yeopa/" + objectKey + originalName;
-        postRepository.save(Post.from(userId,postRequest,image,objectKey,originalName));
+        postRepository.save(Post.from(userId,nickname,postRequest,image,objectKey,originalName));
     }
 
     public PostResponse getPost(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Post Not Found"));
 
-        return new PostResponse(post.getUserId(),post.getTitle(),post.getLocation()
-        ,post.getText(),post.getImage(),post.getSingleText());
+        return new PostResponse(post.getUserId(),post.getNickname(),post.getTitle(),post.getLocation()
+        ,post.getText(),post.getImage(),post.getSingleText(),post.getCreatedAt());
     }
 
     public List<MypageResponse> getAllPost(){
-        return  postRepository.findAll().stream().map(post -> new MypageResponse(
-                post.getImage(),
-                post.getTitle(),
-                post.getSingleText(),
-                post.getCreatedAt(),
-                post.getLocation()
+        return  postRepository.findAllByOrderByCreatedAtDesc().stream().map(post -> new MypageResponse(
+                post.id(),
+                post.image(),
+                post.title(),
+                post.singleText(),
+                post.createdAt(),
+                post.location()
                 ))
                 .toList();
 
@@ -46,6 +47,7 @@ public class PostService {
 
     public List<MypageResponse> getMyPost(Long id){
         return  postRepository.findAllByUserId(id).stream().map(post -> new MypageResponse(
+                        post.id(),
                         post.image(),
                         post.title(),
                         post.singleText(),

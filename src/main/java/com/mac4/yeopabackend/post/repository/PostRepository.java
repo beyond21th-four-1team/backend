@@ -13,4 +13,5 @@ import java.util.Optional;
 public interface PostRepository extends JpaRepository<Post,Long> {
     List<MypageResponse> findAllByUserId(Long userId);
 
+    List<MypageResponse> findAllByOrderByCreatedAtDesc();
 }

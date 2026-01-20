@@ -5,6 +5,7 @@ import com.mac4.yeopabackend.common.jwt.TokenBlacklistStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -60,8 +61,8 @@ public class SecurityConfig {
                 // TODO(세현): 접근 정책으로 인증 없이 허용할 api url 추가
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/health").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**","api/v1/posts").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"api/v1/posts/*","api/v1/posts").permitAll()
                         // 그 외 인증 필요
                         .anyRequest().authenticated()
                 )

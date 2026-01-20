@@ -22,6 +22,7 @@ public class CustomUser implements UserDetails {
         this.email = user.getEmail();
         this.username = user.getUsername();
         this.password = user.getPassword();
+
     }
 
     @Override
@@ -37,7 +38,7 @@ public class CustomUser implements UserDetails {
     // Spring Security에서 username = 로그인 식별자
     @Override
     public String getUsername() {
-        return email;
+        return username;
     }
 
     @Override
