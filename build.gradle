@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.9'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.google.cloud.tools.jib' version '3.4.4'
 }
 
 group = 'com.mac4'
@@ -45,6 +46,22 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 }
+
+jib {
+    from {
+        // Dockerfile의 베이스랑 비슷하게 맞추기
+        image = "eclipse-temurin:21-jre-alpine"
+    }
+    to {
+        // Jenkins에서 --image 옵션으로 덮어쓸 거라 여기서는 기본값만
+        image = "seeking11/argocd-pipe"
+        tags = ['latest'] // 태그 설정 (Jenkins에서 오버라이드 가능)
+    }
+    container {
+        ports = ["8080"]
+    }
+}
+
 
 tasks.named('test') {
     useJUnitPlatform()
