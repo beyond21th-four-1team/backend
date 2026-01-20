@@ -37,7 +37,7 @@ pipeline {
             }
         }
 
-        stage('Jib Build and Push') {
+        stage('Docker Build and Push') {
             steps {
                 dir('source') {
                     withCredentials([
