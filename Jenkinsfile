@@ -14,14 +14,15 @@ pipeline {
             steps {
                 dir('source') {
                     git branch: 'main', url: "${env.SOURCE_GITHUB_URL}"
-                    
+
                     withCredentials([string(credentialsId: 'APP_DEV_YML', variable: 'APP_DEV_YML')]) {
                         sh '''
-                          mkdir -p src/main/resources
-                          printf "%s" "$APP_DEV_YML" > src/main/resources/application-dev.yml
-                          chmod +x ./gradlew
-                        ./gradlew clean build -x test
-                    '''
+                            mkdir -p src/main/resources
+                            printf "%s" "$APP_DEV_YML" > src/main/resources/application-dev.yml
+                            chmod +x ./gradlew
+                            ./gradlew clean build -x test
+                        '''
+                    }
                 }
             }
         }
@@ -29,23 +30,21 @@ pipeline {
         stage('Docker Build and Push') {
             steps {
                 dir('source') {
-                    script {
-                        withCredentials([
-                            usernamePassword(
-                                credentialsId: 'DOCKERHUB_PASSWORD',
-                                usernameVariable: 'DOCKER_USER',
-                                passwordVariable: 'DOCKER_PASS'
-                            )
-                        ]) {
-                            sh '''
-                                docker build -t ${DOCKER_USER}/argocd-pipe:${BUILD_NUMBER} .
-                                docker build -t ${DOCKER_USER}/argocd-pipe:latest .
-                                docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
-                                docker push ${DOCKER_USER}/argocd-pipe:${BUILD_NUMBER}
-                                docker push ${DOCKER_USER}/argocd-pipe:latest
-                                docker logout
-                            '''
-                        }
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'DOCKERHUB_PASSWORD',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )
+                    ]) {
+                        sh '''
+                            docker build -t ${DOCKER_USER}/argocd-pipe:${BUILD_NUMBER} .
+                            docker build -t ${DOCKER_USER}/argocd-pipe:latest .
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push ${DOCKER_USER}/argocd-pipe:${BUILD_NUMBER}
+                            docker push ${DOCKER_USER}/argocd-pipe:latest
+                            docker logout
+                        '''
                     }
                 }
             }
@@ -59,11 +58,11 @@ pipeline {
                         url: "${env.MANIFESTS_GITHUB_URL}"
 
                     sh """
-                       sed -i '' 's|argocd-pipe:.*|argocd-pipe:${BUILD_NUMBER}|' boot-deployment.yml
+                        sed -i '' 's|argocd-pipe:.*|argocd-pipe:${BUILD_NUMBER}|' boot-deployment.yml
                         git add boot-deployment.yml
                         git config user.name "${env.GIT_USERNAME}"
                         git config user.email "${env.GIT_EMAIL}"
-                        git commit -m "[UPDATE] ${BUILD_NUMBER} image versioning"
+                        git commit -m "[UPDATE] ${BUILD_NUMBER} image versioning" || echo "No changes to commit"
                         git push origin main
                     """
                 }
@@ -80,4 +79,3 @@ pipeline {
         }
     }
 }
-
